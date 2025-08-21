@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>أسعار الصرف اليمن</title>
+<style>
+  body {
+    font-family: 'Tahoma', sans-serif;
+    background: linear-gradient(-45deg, #1e3c72, #2a5298, #1e3c72, #2a5298);
+    background-size: 400% 400%;
+    animation: gradientBG 10s ease infinite;
+    margin: 0; padding: 0;
+    color: #fff; text-align: center;
+  }
+  @keyframes gradientBG {
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+  }
+
+  /* الشريط العلوي */
+  #topBar {
+    width: 100%;
+    background: rgba(0,0,0,0.7);
+    padding: 12px 20px;
+    box-sizing: border-box;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  h1 {
+    cursor: pointer; margin: 20px; font-size:28px; text-shadow: 1px 1px 5px #000;
+  }
+  table {
+    margin:20px auto; border-collapse:collapse; width:80%; background:rgba(255,255,255,0.1); border-radius:12px; overflow:hidden;
+  }
+  th,td {
+    padding:12px; border-bottom:1px solid rgba(255,255,255,0.2);
+  }
+  th {
+    background: rgba(0,0,0,0.3);
+  }
+  tr:hover {
+    background: rgba(255,255,255,0.1);
+  }
+  .hidden {
+    display:none;
+  }
+  .form-container, .convert-container {
+    background:rgba(0,0,0,0.5);
+    padding:20px;
+    margin:20px auto;
+    width:300px;
+    border-radius:12px;
+    text-align:left;
+  }
+  input,select {
+    width:100%; padding:8px; margin:6px 0; border:none; border-radius:6px; font-size:16px;
+  }
+  button {
+    padding:10px 20px; margin-top:10px; border:none; border-radius:8px; background:#ff9800; color:#fff; font-weight:bold; cursor:pointer; transition:0.3s;
+  }
+  button:hover {
+    background:#e68900;
+  }
+
+  /* زر التحويل العائم */
+  #convertBtnFloat {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: #00c853;
+    color: #fff;
+    font-size: 28px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    z-index: 1001;
+  }
+
+  /* نافذة التحويل المتجاوبة */
+  #convertPopup {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 95%;
+    max-width: 400px;
+    background: rgba(0,0,0,0.9);
+    padding: 20px;
+    border-radius: 12px 12px 0 0;
+    display: none;
+    z-index: 1000;
+    box-sizing: border-box;
+  }
+
+  #closePopup {
+    background: red;
+    float: right;
+    padding: 2px 8px;
+    border-radius: 50%;
+    margin-top: -10px;
+    margin-right: -10px;
+    cursor: pointer;
+  }
+
+  @media(max-width: 500px){
+    #convertPopup {
+      width: 100%;
+      padding: 15px;
+    }
+    #convertPopup input, #convertPopup select, #convertPopup button {
+      font-size: 14px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- شريط علوي -->
+<div id="topBar">مرحباً بك في أسعار الصرف</div>
+
+<h1 id="title">أسعار الصرف اليوم</h1>
+
+<table>
+<thead>
+<tr><th>العملة</th><th>شراء</th><th>بيع</th></tr>
+</thead>
+<tbody id="ratesTable">
+<tr><td>الدولار الأمريكي (USD)</td><td id="usdBuy">1700</td><td id="usdSell">1715</td></tr>
+<tr><td>الريال السعودي (SAR)</td><td id="sarBuy">450</td><td id="sarSell">453</td></tr>
+<tr><td>الدرهم الإماراتي (AED)</td><td id="aedBuy">460</td><td id="aedSell">463</td></tr>
+</tbody>
+</table>
+
+<div id="editForm" class="hidden form-container">
+<h3>تعديل الأسعار</h3>
+<label>USD شراء:</label><input type="number" id="usdBuyInput">
+<label>USD بيع:</label><input type="number" id="usdSellInput">
+<label>SAR شراء:</label><input type="number" id="sarBuyInput">
+<label>SAR بيع:</label><input type="number" id="sarSellInput">
+<label>AED شراء:</label><input type="number" id="aedBuyInput">
+<label>AED بيع:</label><input type="number" id="aedSellInput">
+<button onclick="saveRates()">💾 حفظ</button>
+</div>
+
+<button id="convertBtnFloat">🔄</button>
+
+<div id="convertPopup" class="convert-container">
+<span id="closePopup">❌</span>
+<h3>محول العملات</h3>
+<label>المبلغ بالريال اليمني:</label>
+<input type="number" id="amount" placeholder="أدخل المبلغ">
+<label>اختر العملة للتحويل إليها:</label>
+<select id="currency">
+<option value="usd">الدولار USD</option>
+<option value="sar">الريال SAR</option>
+<option value="aed">الدرهم AED</option>
+</select>
+<button onclick="convert()">تحويل</button>
+<p id="result"></p>
+</div>
+
+<script>
+const PASSWORD="123456789omar";
+
+// تحميل الأسعار والشريط العلوي من localStorage
+function loadRates(){
+  const usdBuy=localStorage.getItem("usdBuy")||1700;
+  const usdSell=localStorage.getItem("usdSell")||1715;
+  const sarBuy=localStorage.getItem("sarBuy")||450;
+  const sarSell=localStorage.getItem("sarSell")||453;
+  const aedBuy=localStorage.getItem("aedBuy")||460;
+  const aedSell=localStorage.getItem("aedSell")||463;
+
+  document.getElementById("usdBuy").innerText=usdBuy;
+  document.getElementById("usdSell").innerText=usdSell;
+  document.getElementById("sarBuy").innerText=sarBuy;
+  document.getElementById("sarSell").innerText=sarSell;
+  document.getElementById("aedBuy").innerText=aedBuy;
+  document.getElementById("aedSell").innerText=aedSell;
+
+  const topText = localStorage.getItem("topBarText") || "مرحباً بك في أسعار الصرف";
+  document.getElementById("topBar").innerText = topText;
+}
+loadRates();
+
+// تعديل الشريط العلوي بكلمة المرور
+const topBar = document.getElementById("topBar");
+topBar.addEventListener("click", ()=>{
+  let pass = prompt("أدخل كلمة المرور لتعديل الشريط:");
+  if(pass === PASSWORD){
+    topBar.setAttribute("contenteditable", "true");
+    topBar.focus();
+  } else {
+    alert("كلمة المرور غير صحيحة!");
+  }
+});
+
+// حفظ نص الشريط عند فقدان التركيز
+topBar.addEventListener("blur", ()=>{
+  topBar.removeAttribute("contenteditable");
+  localStorage.setItem("topBarText", topBar.innerText);
+});
+
+// تعديل الأسعار
+document.getElementById("title").addEventListener("click",()=>{
+  let pass=prompt("أدخل كلمة المرور لتعديل الأسعار:");
+  if(pass===PASSWORD){
+    document.getElementById("editForm").classList.remove("hidden");
+    document.getElementById("usdBuyInput").value=document.getElementById("usdBuy").innerText;
+    document.getElementById("usdSellInput").value=document.getElementById("usdSell").innerText;
+    document.getElementById("sarBuyInput").value=document.getElementById("sarBuy").innerText;
+    document.getElementById("sarSellInput").value=document.getElementById("sarSell").innerText;
+    document.getElementById("aedBuyInput").value=document.getElementById("aedBuy").innerText;
+    document.getElementById("aedSellInput").value=document.getElementById("aedSell").innerText;
+  }else{ alert("كلمة المرور غير صحيحة!"); }
+});
+
+function saveRates(){
+  const usdBuy=document.getElementById("usdBuyInput").value;
+  const usdSell=document.getElementById("usdSellInput").value;
+  const sarBuy=document.getElementById("sarBuyInput").value;
+  const sarSell=document.getElementById("sarSellInput").value;
+  const aedBuy=document.getElementById("aedBuyInput").value;
+  const aedSell=document.getElementById("aedSellInput").value;
+
+  document.getElementById("usdBuy").innerText=usdBuy;
+  document.getElementById("usdSell").innerText=usdSell;
+  document.getElementById("sarBuy").innerText=sarBuy;
+  document.getElementById("sarSell").innerText=sarSell;
+  document.getElementById("aedBuy").innerText=aedBuy;
+  document.getElementById("aedSell").innerText=aedSell;
+
+  localStorage.setItem("usdBuy",usdBuy);
+  localStorage.setItem("usdSell",usdSell);
+  localStorage.setItem("sarBuy",sarBuy);
+  localStorage.setItem("sarSell",sarSell);
+  localStorage.setItem("aedBuy",aedBuy);
+  localStorage.setItem("aedSell",aedSell);
+
+  alert("تم تحديث الأسعار ✅");
+  document.getElementById("editForm").classList.add("hidden");
+}
+
+// زر التحويل العائم
+const convertBtn=document.getElementById("convertBtnFloat");
+const convertPopup=document.getElementById("convertPopup");
+const closePopup=document.getElementById("closePopup");
+convertBtn.addEventListener("click",()=>{convertPopup.style.display="block";});
+closePopup.addEventListener("click",()=>{convertPopup.style.display="none";});
+
+// وظيفة التحويل
+function convert(){
+  let amount=parseFloat(document.getElementById("amount").value);
+  if(isNaN(amount)){ alert("أدخل مبلغ صحيح"); return; }
+  let currency=document.getElementById("currency").value;
+  let result=0;
+
+  if(currency==="usd") result=amount/parseFloat(document.getElementById("usdSell").innerText);
+  else if(currency==="sar") result=amount/parseFloat(document.getElementById("sarSell").innerText);
+  else if(currency==="aed") result=amount/parseFloat(document.getElementById("aedSell").innerText);
+
+  document.getElementById("result").innerText="النتيجة: "+result.toFixed(2)+" "+currency.toUpperCase();
+}
+</script>
+
+</body>
+                          </html>
